@@ -1,0 +1,243 @@
+
+<!doctype html>
+<html lang='ca'>
+  <head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>Dashboard 3r ESO – Matemàtiques (interactiu)</title>
+    <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+    <script src="https://cdn.plot.ly/plotly-2.29.1.min.js"></script>
+    <style>
+      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; margin: 18px; background:#ffffff; }
+      .grid { display:grid; grid-template-columns: 1fr; gap: 16px; }
+      @media (min-width: 1200px) { .grid { grid-template-columns: 1fr 1fr; } }
+      .card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:12px; }
+      .kpis { display:flex; gap:12px; flex-wrap:wrap; }
+      .kpi { flex:1; min-width:180px; background:#f5f7fb; border-radius:8px; padding:12px; }
+      .kpi .label { font-size:12px; color:#6b7280; }
+      .kpi .value { font-size:22px; font-weight:700; }
+      .row { display:flex; gap:16px; flex-wrap:wrap; }
+      .col { flex:1; min-width:340px; }
+      .muted { color:#6b7280; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border:1px solid #e5e7eb; padding:6px 8px; text-align:left; }
+      th { background:#f9fafb; }
+      select { padding:8px; border-radius:8px; border:1px solid #d1d5db; }
+    </style>
+  </head>
+  <body>
+    <div class='grid'>
+      <div class='card' style='grid-column:1 / -1'>
+        <h1 style='margin:0'>Dashboard interactiu – 3r d'ESO · Matemàtiques</h1>
+        <div class='muted'>Generat el 28/02/2026 10:56</div>
+        <div class='kpis'>
+          <div class='kpi'><div class='label'>Alumnat</div><div class='value' id='kpi-alumnat'>15</div></div>
+          <div class='kpi'><div class='label'>Mitjana final</div><div class='value' id='kpi-mitjana'>5.45</div></div>
+          <div class='kpi'><div class='label'>% Aprovats</div><div class='value' id='kpi-pass'>66.7%</div></div>
+          <div class='kpi'><div class='label'>Tendència U1–U3 → U5–U7</div><div class='value'>5.47 → 5.01</div></div>
+        </div>
+      </div>
+
+      <div class='card'><div id='fig-franges'></div></div>
+      <div class='card'><div id='fig-hist'></div></div>
+      <div class='card'><div id='fig-exams'></div></div>
+      <div class='card'><div id='fig-llib'></div></div>
+      <div class='card'><div id='fig-sc-ex'></div></div>
+      <div class='card'><div id='fig-sc-ll'></div></div>
+      <div class='card'><div id='fig-zero'></div></div>
+      <div class='card'><div id='fig-trend'></div></div>
+
+      <div class='card' style='grid-column:1 / -1'>
+        <h2 style='margin:6px 0 12px 0'>Anàlisi individual</h2>
+        <div class='row' style='align-items:center; margin-bottom:8px;'>
+          <div class='col' style='flex:0 0 320px;'>
+            <label for='sel-alumne' class='muted'>Tria l'alumne</label><br>
+            <select id='sel-alumne'></select>
+          </div>
+          <div class='col'>
+            <div class='kpis'>
+              <div class='kpi'><div class='label'>Nota final</div><div class='value' id='kpi-nf'></div></div>
+              <div class='kpi'><div class='label'>Mitjana exàmens</div><div class='value' id='kpi-mex'></div></div>
+              <div class='kpi'><div class='label'>Mitjana tasques</div><div class='value' id='kpi-mt'></div></div>
+              <div class='kpi'><div class='label'>Aula</div><div class='value' id='kpi-aula'></div></div>
+              <div class='kpi'><div class='label'>Rang</div><div class='value' id='kpi-rang'></div></div>
+              <div class='kpi'><div class='label'>Franja</div><div class='value' id='kpi-franja'></div></div>
+            </div>
+          </div>
+        </div>
+        <div class='row'>
+          <div class='col'><div id='fig-stu-ex-vs-class'></div></div>
+          <div class='col'><div id='fig-stu-ll-vs-class'></div></div>
+        </div>
+        <div class='row'>
+          <div class='col'><div id='fig-stu-radar'></div></div>
+          <div class='col'><div id='fig-stu-trend'></div></div>
+        </div>
+        <div class='row'>
+          <div class='col' style='flex:1 1 100%'>
+            <h3 style='margin:10px 0 6px'>Detall de notes de l'alumne</h3>
+            <div id='tbl-student'></div>
+          </div>
+        </div>
+      </div>
+
+      <div class='card' style='grid-column:1 / -1'>
+        <div id='fig-selector-metric'></div>
+      </div>
+    </div>
+
+    <script>
+      const DATA = {"meta": {"generated": "28/02/2026 10:56", "n_students": 15, "avg_final": 5.45, "pass_rate": 66.7, "trend_first": 5.47, "trend_last": 5.01}, "exam_cols": ["EX U1", "EX U2", "EX U3", "EX U5", "EX U6", "EX U7"], "llib_cols": ["LLIB U1", "LLIB U2", "LLIB U3", "LLIB U5", "LLIB U6", "LLIB U7"], "exam_means": {"EX U1": 4.25, "EX U2": 6.18, "EX U3": 5.98, "EX U5": 4.1, "EX U6": 4.42, "EX U7": 6.52}, "llib_means": {"LLIB U1": 5.28, "LLIB U2": 5.71, "LLIB U3": 4.92, "LLIB U5": 6.65, "LLIB U6": 4.59, "LLIB U7": 5.77}, "students": {"M B, S": {"alumne": "M B, S", "nota_final": 6.525, "mitjana_ex": 6.458333333333333, "mitjana_tasques": 6.5, "aula": 7.0, "rang": 6, "franja": "Bé (6–6,9)", "zeros_tasques": 0, "exams": {"EX U1": 5.25, "EX U2": 8.5, "EX U3": 7.5, "EX U5": 4.0, "EX U6": 4.0, "EX U7": 9.5}, "tasks": {"LLIB U1": 5.8, "LLIB U2": 6.4, "LLIB U3": 5.8, "LLIB U5": 7.0, "LLIB U6": 7.6, "LLIB U7": 6.4}, "first_avg": 7.083333333333333, "last_avg": 5.833333333333333, "millora": -1.25}, "N, L": {"alumne": "N, L", "nota_final": 2.35, "mitjana_ex": 2.9166666666666665, "mitjana_tasques": 0.0, "aula": 6.0, "rang": 13, "franja": "Insuficient (<5)", "zeros_tasques": 6, "exams": {"EX U1": 4.0, "EX U2": 2.5, "EX U3": 4.0, "EX U5": 1.0, "EX U6": 1.0, "EX U7": 5.0}, "tasks": {"LLIB U1": 0.0, "LLIB U2": 0.0, "LLIB U3": 0.0, "LLIB U5": 0.0, "LLIB U6": 0.0, "LLIB U7": 0.0}, "first_avg": 3.5, "last_avg": 2.3333333333333335, "millora": -1.1666666666666665}, "N, K": {"alumne": "N, K", "nota_final": 6.04, "mitjana_ex": 5.666666666666667, "mitjana_tasques": 6.466666666666666, "aula": 7.0, "rang": 9, "franja": "Bé (6–6,9)", "zeros_tasques": 0, "exams": {"EX U1": 3.25, "EX U2": 7.0, "EX U3": 2.5, "EX U5": 8.0, "EX U6": 6.75, "EX U7": 6.5}, "tasks": {"LLIB U1": 3.4, "LLIB U2": 8.2, "LLIB U3": 7.0, "LLIB U5": 7.0, "LLIB U6": 5.0, "LLIB U7": 8.2}, "first_avg": 4.25, "last_avg": 7.083333333333333, "millora": 2.833333333333333}, "R C, K": {"alumne": "R C, K", "nota_final": 7.365, "mitjana_ex": 8.125, "mitjana_tasques": 6.3, "aula": 6.0, "rang": 3, "franja": "Notable (7–8,9)", "zeros_tasques": 0, "exams": {"EX U1": 9.5, "EX U2": 8.5, "EX U3": 7.5, "EX U5": 8.0, "EX U6": 5.75, "EX U7": 9.5}, "tasks": {"LLIB U1": 5.8, "LLIB U2": 5.8, "LLIB U3": 7.0, "LLIB U5": 7.0, "LLIB U6": 6.4, "LLIB U7": 5.8}, "first_avg": 8.5, "last_avg": 7.75, "millora": -0.75}, "S, A": {"alumne": "S, A", "nota_final": 5.31, "mitjana_ex": 3.5833333333333335, "mitjana_tasques": 7.533333333333334, "aula": 9.0, "rang": 10, "franja": "Suficient (5–5,9)", "zeros_tasques": 1, "exams": {"EX U1": 1.75, "EX U2": 5.5, "EX U3": 7.0, "EX U5": 3.25, "EX U6": 1.5, "EX U7": 2.5}, "tasks": {"LLIB U1": 10.0, "LLIB U2": 8.8, "LLIB U3": 8.2, "LLIB U5": 9.4, "LLIB U6": 0.0, "LLIB U7": 8.8}, "first_avg": 4.75, "last_avg": 2.4166666666666665, "millora": -2.3333333333333335}, "S, N": {"alumne": "S, N", "nota_final": 2.24, "mitjana_ex": 1.6666666666666667, "mitjana_tasques": 2.8000000000000003, "aula": 4.0, "rang": 14, "franja": "Insuficient (<5)", "zeros_tasques": 3, "exams": {"EX U1": 0.5, "EX U2": 2.5, "EX U3": 3.0, "EX U5": 1.0, "EX U6": 0.0, "EX U7": 3.0}, "tasks": {"LLIB U1": 0.0, "LLIB U2": 5.2, "LLIB U3": 0.0, "LLIB U5": 6.4, "LLIB U6": 0.0, "LLIB U7": 5.2}, "first_avg": 2.0, "last_avg": 1.3333333333333333, "millora": -0.6666666666666667}, "S, L": {"alumne": "S, L", "nota_final": 3.9, "mitjana_ex": 4.75, "mitjana_tasques": 1.5, "aula": 6.0, "rang": 12, "franja": "Insuficient (<5)", "zeros_tasques": 4, "exams": {"EX U1": 1.25, "EX U2": 4.5, "EX U3": 6.0, "EX U5": 1.0, "EX U6": 8.75, "EX U7": 7.0}, "tasks": {"LLIB U1": 0.0, "LLIB U2": 0.0, "LLIB U3": 0.0, "LLIB U5": 5.0, "LLIB U6": 4.0, "LLIB U7": 0.0}, "first_avg": 3.9166666666666665, "last_avg": 5.583333333333333, "millora": 1.6666666666666665}, "V A, M": {"alumne": "V A, M", "nota_final": 6.435, "mitjana_ex": 6.708333333333333, "mitjana_tasques": 5.699999999999999, "aula": 7.0, "rang": 8, "franja": "Bé (6–6,9)", "zeros_tasques": 0, "exams": {"EX U1": 4.5, "EX U2": 7.0, "EX U3": 6.0, "EX U5": 6.0, "EX U6": 7.25, "EX U7": 9.5}, "tasks": {"LLIB U1": 5.2, "LLIB U2": 5.8, "LLIB U3": 5.8, "LLIB U5": 7.0, "LLIB U6": 4.6, "LLIB U7": 5.8}, "first_avg": 5.833333333333333, "last_avg": 7.583333333333333, "millora": 1.75}, "M S, M": {"alumne": "M S, M", "nota_final": 6.85, "mitjana_ex": 6.083333333333333, "mitjana_tasques": 8.0, "aula": 8.0, "rang": 5, "franja": "Bé (6–6,9)", "zeros_tasques": 0, "exams": {"EX U1": 5.25, "EX U2": 7.0, "EX U3": 9.25, "EX U5": 4.75, "EX U6": 5.5, "EX U7": 4.75}, "tasks": {"LLIB U1": 8.2, "LLIB U2": 8.8, "LLIB U3": 6.4, "LLIB U5": 9.4, "LLIB U6": 6.4, "LLIB U7": 8.8}, "first_avg": 7.166666666666667, "last_avg": 5.0, "millora": -2.166666666666667}, "O T, R": {"alumne": "O T, R", "nota_final": 1.1, "mitjana_ex": 1.0, "mitjana_tasques": 1.3333333333333333, "aula": 1.0, "rang": 15, "franja": "Insuficient (<5)", "zeros_tasques": 0, "exams": {"EX U1": 0.5, "EX U2": 1.5, "EX U3": 0.5, "EX U5": 1.0, "EX U6": 0.5, "EX U7": 2.0}, "tasks": {"LLIB U1": 1.0, "LLIB U2": 1.0, "LLIB U3": 1.0, "LLIB U5": 2.0, "LLIB U6": 1.0, "LLIB U7": 2.0}, "first_avg": 0.8333333333333334, "last_avg": 1.1666666666666667, "millora": 0.33333333333333337}, "R G, S": {"alumne": "R G, S", "nota_final": 4.58, "mitjana_ex": 4.166666666666667, "mitjana_tasques": 5.6000000000000005, "aula": 4.0, "rang": 11, "franja": "Insuficient (<5)", "zeros_tasques": 0, "exams": {"EX U1": 2.5, "EX U2": 5.25, "EX U3": 4.5, "EX U5": 3.25, "EX U6": 2.25, "EX U7": 7.25}, "tasks": {"LLIB U1": 5.8, "LLIB U2": 4.0, "LLIB U3": 6.4, "LLIB U5": 8.2, "LLIB U6": 5.2, "LLIB U7": 4.0}, "first_avg": 4.083333333333333, "last_avg": 4.25, "millora": 0.16666666666666696}, "R V, E": {"alumne": "R V, E", "nota_final": 6.445, "mitjana_ex": 5.625, "mitjana_tasques": 7.899999999999999, "aula": 7.0, "rang": 7, "franja": "Bé (6–6,9)", "zeros_tasques": 0, "exams": {"EX U1": 5.5, "EX U2": 8.5, "EX U3": 5.5, "EX U5": 3.5, "EX U6": 4.0, "EX U7": 6.75}, "tasks": {"LLIB U1": 10.0, "LLIB U2": 8.8, "LLIB U3": 5.2, "LLIB U5": 8.8, "LLIB U6": 5.8, "LLIB U7": 8.8}, "first_avg": 6.5, "last_avg": 4.75, "millora": -1.75}, "S M, V": {"alumne": "S M, V", "nota_final": 7.18, "mitjana_ex": 6.666666666666667, "mitjana_tasques": 7.6000000000000005, "aula": 9.0, "rang": 4, "franja": "Notable (7–8,9)", "zeros_tasques": 0, "exams": {"EX U1": 5.0, "EX U2": 7.0, "EX U3": 9.5, "EX U5": 5.75, "EX U6": 4.75, "EX U7": 8.0}, "tasks": {"LLIB U1": 8.8, "LLIB U2": 7.6, "LLIB U3": 6.4, "LLIB U5": 8.2, "LLIB U6": 7.0, "LLIB U7": 7.6}, "first_avg": 7.166666666666667, "last_avg": 6.166666666666667, "millora": -1.0}, "T T, C": {"alumne": "T T, C", "nota_final": 7.875, "mitjana_ex": 7.125, "mitjana_tasques": 9.0, "aula": 9.0, "rang": 1, "franja": "Notable (7–8,9)", "zeros_tasques": 0, "exams": {"EX U1": 5.5, "EX U2": 8.5, "EX U3": 7.0, "EX U5": 6.0, "EX U6": 7.5, "EX U7": 8.25}, "tasks": {"LLIB U1": 9.4, "LLIB U2": 8.8, "LLIB U3": 8.2, "LLIB U5": 9.4, "LLIB U6": 9.4, "LLIB U7": 8.8}, "first_avg": 7.0, "last_avg": 7.25, "millora": 0.25}, "V V, L": {"alumne": "V V, L", "nota_final": 7.57, "mitjana_ex": 8.083333333333334, "mitjana_tasques": 6.066666666666666, "aula": 9.0, "rang": 2, "franja": "Notable (7–8,9)", "zeros_tasques": 0, "exams": {"EX U1": 9.5, "EX U2": 9.0, "EX U3": 10.0, "EX U5": 5.0, "EX U6": 6.75, "EX U7": 8.25}, "tasks": {"LLIB U1": 5.8, "LLIB U2": 6.4, "LLIB U3": 6.4, "LLIB U5": 5.0, "LLIB U6": 6.4, "LLIB U7": 6.4}, "first_avg": 9.5, "last_avg": 6.666666666666667, "millora": -2.833333333333333}}, "rank_table": [{"Alumne": "T T, C", "Nota final": 7.875, "Rang": 1}, {"Alumne": "V V, L", "Nota final": 7.57, "Rang": 2}, {"Alumne": "R C, K", "Nota final": 7.365, "Rang": 3}, {"Alumne": "S M, V", "Nota final": 7.18, "Rang": 4}, {"Alumne": "M S, M", "Nota final": 6.85, "Rang": 5}, {"Alumne": "M B, S", "Nota final": 6.525, "Rang": 6}, {"Alumne": "R V, E", "Nota final": 6.445, "Rang": 7}, {"Alumne": "V A, M", "Nota final": 6.435, "Rang": 8}, {"Alumne": "N, K", "Nota final": 6.04, "Rang": 9}, {"Alumne": "S, A", "Nota final": 5.31, "Rang": 10}, {"Alumne": "R G, S", "Nota final": 4.58, "Rang": 11}, {"Alumne": "S, L", "Nota final": 3.9, "Rang": 12}, {"Alumne": "N, L", "Nota final": 2.35, "Rang": 13}, {"Alumne": "S, N", "Nota final": 2.24, "Rang": 14}, {"Alumne": "O T, R", "Nota final": 1.1, "Rang": 15}], "franges_counts": {"Insuficient (<5)": 5, "Suficient (5–5,9)": 1, "Bé (6–6,9)": 5, "Notable (7–8,9)": 4, "Excel·lent (9–10)": 0}, "full_table": [{"Alumne": "M B, S", "EX U1": 5.25, "EX U2": 8.5, "EX U3": 7.5, "EX U5": 4.0, "EX U6": 4.0, "EX U7": 9.5, "LLIB U1": 5.8, "LLIB U2": 6.4, "LLIB U3": 5.8, "LLIB U5": 7.0, "LLIB U6": 7.6, "LLIB U7": 6.4, "Aula": 7, "Nota final": 6.525, "Mitjana exàmens": 6.458333333333333, "Mitjana tasques": 6.5, "Grup": "Aprovats (≥5)", "Franja": "Bé (6–6,9)"}, {"Alumne": "N, L", "EX U1": 4.0, "EX U2": 2.5, "EX U3": 4.0, "EX U5": 1.0, "EX U6": 1.0, "EX U7": 5.0, "LLIB U1": 0.0, "LLIB U2": 0.0, "LLIB U3": 0.0, "LLIB U5": 0.0, "LLIB U6": 0.0, "LLIB U7": 0.0, "Aula": 6, "Nota final": 2.35, "Mitjana exàmens": 2.9166666666666665, "Mitjana tasques": 0.0, "Grup": "Alt risc (<4)", "Franja": "Insuficient (<5)"}, {"Alumne": "N, K", "EX U1": 3.25, "EX U2": 7.0, "EX U3": 2.5, "EX U5": 8.0, "EX U6": 6.75, "EX U7": 6.5, "LLIB U1": 3.4, "LLIB U2": 8.2, "LLIB U3": 7.0, "LLIB U5": 7.0, "LLIB U6": 5.0, "LLIB U7": 8.2, "Aula": 7, "Nota final": 6.04, "Mitjana exàmens": 5.666666666666667, "Mitjana tasques": 6.466666666666666, "Grup": "Aprovats (≥5)", "Franja": "Bé (6–6,9)"}, {"Alumne": "R C, K", "EX U1": 9.5, "EX U2": 8.5, "EX U3": 7.5, "EX U5": 8.0, "EX U6": 5.75, "EX U7": 9.5, "LLIB U1": 5.8, "LLIB U2": 5.8, "LLIB U3": 7.0, "LLIB U5": 7.0, "LLIB U6": 6.4, "LLIB U7": 5.8, "Aula": 6, "Nota final": 7.365, "Mitjana exàmens": 8.125, "Mitjana tasques": 6.3, "Grup": "Aprovats (≥5)", "Franja": "Notable (7–8,9)"}, {"Alumne": "S, A", "EX U1": 1.75, "EX U2": 5.5, "EX U3": 7.0, "EX U5": 3.25, "EX U6": 1.5, "EX U7": 2.5, "LLIB U1": 10.0, "LLIB U2": 8.8, "LLIB U3": 8.2, "LLIB U5": 9.4, "LLIB U6": 0.0, "LLIB U7": 8.8, "Aula": 9, "Nota final": 5.31, "Mitjana exàmens": 3.5833333333333335, "Mitjana tasques": 7.533333333333334, "Grup": "Aprovats (≥5)", "Franja": "Suficient (5–5,9)"}, {"Alumne": "S, N", "EX U1": 0.5, "EX U2": 2.5, "EX U3": 3.0, "EX U5": 1.0, "EX U6": 0.0, "EX U7": 3.0, "LLIB U1": 0.0, "LLIB U2": 5.2, "LLIB U3": 0.0, "LLIB U5": 6.4, "LLIB U6": 0.0, "LLIB U7": 5.2, "Aula": 4, "Nota final": 2.24, "Mitjana exàmens": 1.6666666666666667, "Mitjana tasques": 2.8000000000000003, "Grup": "Alt risc (<4)", "Franja": "Insuficient (<5)"}, {"Alumne": "S, L", "EX U1": 1.25, "EX U2": 4.5, "EX U3": 6.0, "EX U5": 1.0, "EX U6": 8.75, "EX U7": 7.0, "LLIB U1": 0.0, "LLIB U2": 0.0, "LLIB U3": 0.0, "LLIB U5": 5.0, "LLIB U6": 4.0, "LLIB U7": 0.0, "Aula": 6, "Nota final": 3.9, "Mitjana exàmens": 4.75, "Mitjana tasques": 1.5, "Grup": "Alt risc (<4)", "Franja": "Insuficient (<5)"}, {"Alumne": "V A, M", "EX U1": 4.5, "EX U2": 7.0, "EX U3": 6.0, "EX U5": 6.0, "EX U6": 7.25, "EX U7": 9.5, "LLIB U1": 5.2, "LLIB U2": 5.8, "LLIB U3": 5.8, "LLIB U5": 7.0, "LLIB U6": 4.6, "LLIB U7": 5.8, "Aula": 7, "Nota final": 6.435, "Mitjana exàmens": 6.708333333333333, "Mitjana tasques": 5.699999999999999, "Grup": "Aprovats (≥5)", "Franja": "Bé (6–6,9)"}, {"Alumne": "M S, M", "EX U1": 5.25, "EX U2": 7.0, "EX U3": 9.25, "EX U5": 4.75, "EX U6": 5.5, "EX U7": 4.75, "LLIB U1": 8.2, "LLIB U2": 8.8, "LLIB U3": 6.4, "LLIB U5": 9.4, "LLIB U6": 6.4, "LLIB U7": 8.8, "Aula": 8, "Nota final": 6.85, "Mitjana exàmens": 6.083333333333333, "Mitjana tasques": 8.0, "Grup": "Aprovats (≥5)", "Franja": "Bé (6–6,9)"}, {"Alumne": "O T, R", "EX U1": 0.5, "EX U2": 1.5, "EX U3": 0.5, "EX U5": 1.0, "EX U6": 0.5, "EX U7": 2.0, "LLIB U1": 1.0, "LLIB U2": 1.0, "LLIB U3": 1.0, "LLIB U5": 2.0, "LLIB U6": 1.0, "LLIB U7": 2.0, "Aula": 1, "Nota final": 1.1, "Mitjana exàmens": 1.0, "Mitjana tasques": 1.3333333333333333, "Grup": "Alt risc (<4)", "Franja": "Insuficient (<5)"}, {"Alumne": "R G, S", "EX U1": 2.5, "EX U2": 5.25, "EX U3": 4.5, "EX U5": 3.25, "EX U6": 2.25, "EX U7": 7.25, "LLIB U1": 5.8, "LLIB U2": 4.0, "LLIB U3": 6.4, "LLIB U5": 8.2, "LLIB U6": 5.2, "LLIB U7": 4.0, "Aula": 4, "Nota final": 4.58, "Mitjana exàmens": 4.166666666666667, "Mitjana tasques": 5.6000000000000005, "Grup": "Llindar (4–4,9)", "Franja": "Insuficient (<5)"}, {"Alumne": "R V, E", "EX U1": 5.5, "EX U2": 8.5, "EX U3": 5.5, "EX U5": 3.5, "EX U6": 4.0, "EX U7": 6.75, "LLIB U1": 10.0, "LLIB U2": 8.8, "LLIB U3": 5.2, "LLIB U5": 8.8, "LLIB U6": 5.8, "LLIB U7": 8.8, "Aula": 7, "Nota final": 6.445, "Mitjana exàmens": 5.625, "Mitjana tasques": 7.899999999999999, "Grup": "Aprovats (≥5)", "Franja": "Bé (6–6,9)"}, {"Alumne": "S M, V", "EX U1": 5.0, "EX U2": 7.0, "EX U3": 9.5, "EX U5": 5.75, "EX U6": 4.75, "EX U7": 8.0, "LLIB U1": 8.8, "LLIB U2": 7.6, "LLIB U3": 6.4, "LLIB U5": 8.2, "LLIB U6": 7.0, "LLIB U7": 7.6, "Aula": 9, "Nota final": 7.18, "Mitjana exàmens": 6.666666666666667, "Mitjana tasques": 7.6000000000000005, "Grup": "Aprovats (≥5)", "Franja": "Notable (7–8,9)"}, {"Alumne": "T T, C", "EX U1": 5.5, "EX U2": 8.5, "EX U3": 7.0, "EX U5": 6.0, "EX U6": 7.5, "EX U7": 8.25, "LLIB U1": 9.4, "LLIB U2": 8.8, "LLIB U3": 8.2, "LLIB U5": 9.4, "LLIB U6": 9.4, "LLIB U7": 8.8, "Aula": 9, "Nota final": 7.875, "Mitjana exàmens": 7.125, "Mitjana tasques": 9.0, "Grup": "Aprovats (≥5)", "Franja": "Notable (7–8,9)"}, {"Alumne": "V V, L", "EX U1": 9.5, "EX U2": 9.0, "EX U3": 10.0, "EX U5": 5.0, "EX U6": 6.75, "EX U7": 8.25, "LLIB U1": 5.8, "LLIB U2": 6.4, "LLIB U3": 6.4, "LLIB U5": 5.0, "LLIB U6": 6.4, "LLIB U7": 6.4, "Aula": 9, "Nota final": 7.57, "Mitjana exàmens": 8.083333333333334, "Mitjana tasques": 6.066666666666666, "Grup": "Aprovats (≥5)", "Franja": "Notable (7–8,9)"}]};
+
+      function bar(id, x, y, title, xlab, ylab, horizontal=false, color=null, height=380, margin={t:60,l:60,r:40,b:60}) {
+        const trace = {type:'bar', x:x, y:y, orientation: horizontal? 'h' : 'v', marker:{color: color || undefined}};
+        const layout = {title, xaxis:{title:xlab}, yaxis:{title:ylab}, height, margin};
+        Plotly.newPlot(id, [trace], layout, {displayModeBar:false});
+      }
+
+      // Franges
+      (function(){
+        const fr = DATA.franges_counts; const cats = Object.keys(fr); const vals = cats.map(k=>fr[k]);
+        bar('fig-franges', cats, vals, 'Distribució de notes finals per franges', 'Franja', "Nombre d'alumnes");
+      })();
+
+      // Histograma
+      (function(){
+        const vals = DATA.full_table.map(r=>r['Nota final']);
+        const trace = {type:'histogram', x:vals, nbinsx:10, marker:{color:'#807dba'}};
+        const layout = {title:'Histograma de notes finals', xaxis:{title:'Nota final'}, yaxis:{title:"Nombre d'alumnes"}, height:380, margin:{t:60,l:60,r:40,b:60}};
+        Plotly.newPlot('fig-hist',[trace],layout,{displayModeBar:false});
+      })();
+
+      // Mitjanes per unitat
+      (function(){
+        const em = Object.entries(DATA.exam_means).sort((a,b)=>a[1]-b[1]);
+        const lm = Object.entries(DATA.llib_means).sort((a,b)=>a[1]-b[1]);
+        bar('fig-exams', em.map(d=>d[1]), em.map(d=>d[0]), "Mitjana d'exàmens per unitat (ordenades)", 'Mitjana', 'Unitat', true, '#6baed6', 420, {t:60,l:120,r:40,b:60});
+        bar('fig-llib', lm.map(d=>d[1]), lm.map(d=>d[0]), 'Mitjana de tasques/llibreta per unitat (ordenades)', 'Mitjana', 'Unitat', true, '#74c476', 420, {t:60,l:140,r:40,b:60});
+      })();
+
+      // Dispersions per grup
+      (function(){
+        const groups = ['Alt risc (<4)', 'Llindar (4–4,9)', 'Aprovats (≥5)'];
+        const colors = {'Alt risc (<4)':'#ef4444', 'Llindar (4–4,9)':'#f59e0b', 'Aprovats (≥5)':'#10b981'};
+        // Exams vs final
+        let traces = [];
+        groups.forEach(g=>{
+          const pts = DATA.full_table.filter(r=>r['Grup']==g);
+          traces.push({type:'scatter', mode:'markers', name:g, x:pts.map(p=>p['Mitjana exàmens']), y:pts.map(p=>p['Nota final']), marker:{size:10, color:colors[g]}, text:pts.map(p=>p['Alumne']), hovertemplate:'%{text}<br>Exàmens=%{x:.2f}<br>Final=%{y:.2f}<extra></extra>'})
+        });
+        Plotly.newPlot('fig-sc-ex', traces, {title:"Relació: mitjana d'exàmens vs nota final", xaxis:{title:"Mitjana d'exàmens"}, yaxis:{title:'Nota final'}, height:420, margin:{t:60,l:60,r:40,b:60}}, {displayModeBar:false});
+        // Tasques vs final
+        traces = [];
+        groups.forEach(g=>{
+          const pts = DATA.full_table.filter(r=>r['Grup']==g);
+          traces.push({type:'scatter', mode:'markers', name:g, x:pts.map(p=>p['Mitjana tasques']), y:pts.map(p=>p['Nota final']), marker:{size:10, color:colors[g]}, text:pts.map(p=>p['Alumne']), hovertemplate:'%{text}<br>Tasques=%{x:.2f}<br>Final=%{y:.2f}<extra></extra>'})
+        });
+        Plotly.newPlot('fig-sc-ll', traces, {title:"Relació: mitjana de tasques vs nota final", xaxis:{title:"Mitjana de tasques/llibreta"}, yaxis:{title:'Nota final'}, height:420, margin:{t:60,l:60,r:40,b:60}}, {displayModeBar:false});
+      })();
+
+      // Zeros de tasques
+      (function(){
+        const zrows = DATA.full_table.map(r=>{ let z=0; DATA.llib_cols.forEach(u=>{ if(r[u]==0) z++; }); return {al:r['Alumne'], z}; }).filter(d=>d.z>0).sort((a,b)=>b.z-a.z);
+        if(zrows.length===0) {
+          Plotly.newPlot('fig-zero', [], {title:'No hi ha zeros de tasques', height:120}, {displayModeBar:false});
+        } else {
+          const x = zrows.map(d=>d.z), y = zrows.map(d=>d.al);
+          const trace = {type:'bar', x, y, orientation:'h', marker:{color:'#fb6a4a'}};
+          Plotly.newPlot('fig-zero',[trace], {title:'Alumnat amb tasques sense entregar (zeros)', xaxis:{title:'Nombre de zeros'}, yaxis:{title:'Alumne'}, height:420, margin:{t:60,l:140,r:40,b:60}}, {displayModeBar:false});
+        }
+      })();
+
+      // Tendència global
+      (function(){
+        const trace = {type:'bar', x:['U1–U3','U5–U7'], y:[5.47, 5.01], marker:{color:['#9ecae1','#c6dbef']}};
+        Plotly.newPlot('fig-trend', [trace], {title:"Tendència de la mitjana d'exàmens (U1–U3 vs U5–U7)", yaxis:{title:'Mitjana'}, height:380, margin:{t:60,l:60,r:40,b:60}}, {displayModeBar:false});
+      })();
+
+      // --- Anàlisi individual ---
+      const sel = document.getElementById('sel-alumne');
+      Object.keys(DATA.students).sort().forEach(n=>{ const opt=document.createElement('option'); opt.value=n; opt.text=n; sel.appendChild(opt); });
+
+      function setStudent(name){
+        const s = DATA.students[name];
+        document.getElementById('kpi-nf').textContent = s.nota_final.toFixed(2);
+        document.getElementById('kpi-mex').textContent = s.mitjana_ex.toFixed(2);
+        document.getElementById('kpi-mt').textContent = s.mitjana_tasques.toFixed(2);
+        document.getElementById('kpi-aula').textContent = s.aula.toFixed(1);
+        document.getElementById('kpi-rang').textContent = s.rang + ' / ' + DATA.meta.n_students;
+        document.getElementById('kpi-franja').textContent = s.franja;
+
+        const exUnits = DATA.exam_cols; const exStu = exUnits.map(u=> s.exams[u]); const exAvg = exUnits.map(u=> DATA.exam_means[u]);
+        Plotly.newPlot('fig-stu-ex-vs-class', [
+          {type:'bar', x:exUnits, y:exStu, name:'Alumne', marker:{color:'#4f46e5'}},
+          {type:'bar', x:exUnits, y:exAvg, name:'Mitjana classe', marker:{color:'#9ca3af'}},
+        ], {barmode:'group', title:"Exàmens per unitat – Alumne vs Mitjana classe", xaxis:{title:'Unitat'}, yaxis:{title:'Nota'}, height:380, margin:{t:60,l:60,r:40,b:60}}, {displayModeBar:false});
+
+        const llUnits = DATA.llib_cols; const llStu = llUnits.map(u=> s.tasks[u]); const llAvg = llUnits.map(u=> DATA.llib_means[u]);
+        Plotly.newPlot('fig-stu-ll-vs-class', [
+          {type:'bar', x:llUnits, y:llStu, name:'Alumne', marker:{color:'#16a34a'}},
+          {type:'bar', x:llUnits, y:llAvg, name:'Mitjana classe', marker:{color:'#9ca3af'}},
+        ], {barmode:'group', title:"Tasques/Llibreta per unitat – Alumne vs Mitjana classe", xaxis:{title:'Unitat'}, yaxis:{title:'Nota'}, height:380, margin:{t:60,l:60,r:40,b:60}}, {displayModeBar:false});
+
+        const radarCats = ['Mitjana exàmens','Mitjana tasques','Aula','Nota final'];
+        const radarVals = [s.mitjana_ex, s.mitjana_tasques, s.aula, s.nota_final];
+        const stuArray = Object.values(DATA.students);
+        const radarAvg = [
+          stuArray.reduce((a,b)=>a+b.mitjana_ex,0)/DATA.meta.n_students,
+          stuArray.reduce((a,b)=>a+b.mitjana_tasques,0)/DATA.meta.n_students,
+          stuArray.reduce((a,b)=>a+b.aula,0)/DATA.meta.n_students,
+          DATA.meta.avg_final
+        ];
+        Plotly.newPlot('fig-stu-radar', [
+          {type:'scatterpolar', r: radarVals, theta: radarCats, fill:'toself', name:'Alumne', marker:{color:'#4f46e5'}},
+          {type:'scatterpolar', r: radarAvg, theta: radarCats, fill:'toself', name:'Mitjana classe', marker:{color:'#9ca3af'}}
+        ], {title:'Perfil global (radar)', polar:{radialaxis:{visible:true, range:[0,10]}}, height:380, margin:{t:60,l:60,r:40,b:60}}, {displayModeBar:false});
+
+        Plotly.newPlot('fig-stu-trend', [
+          {type:'bar', x:['U1–U3','U5–U7'], y:[s.first_avg, s.last_avg], marker:{color:['#93c5fd','#bfdbfe']}}
+        ], {title:"Tendència personal d'exàmens (U1–U3 vs U5–U7)", yaxis:{title:'Mitjana'}, annotations:[{x:1, y:Math.max(s.first_avg, s.last_avg)+0.2, text:(s.millora>=0?'+':'')+s.millora.toFixed(2), showarrow:false, font:{color:'#111827', size:12}}], height:380, margin:{t:60,l:60,r:40,b:60}}, {displayModeBar:false});
+
+        const tableDiv = document.getElementById('tbl-student');
+        const rows = [];
+        rows.push(['Indicador','Valor']);
+        rows.push(['Nota final', s.nota_final.toFixed(2)]);
+        rows.push(['Mitjana exàmens', s.mitjana_ex.toFixed(2)]);
+        rows.push(['Mitjana tasques', s.mitjana_tasques.toFixed(2)]);
+        rows.push(['Aula', s.aula.toFixed(1)]);
+        rows.push(['Rang', s.rang + ' / ' + DATA.meta.n_students]);
+        rows.push(['Franja', s.franja]);
+        rows.push(['Zeros de tasques', s.zeros_tasques]);
+        rows.push(['—','—']);
+        Object.entries(s.exams).forEach(([k,v])=>rows.push([k, v.toFixed(2)]));
+        Object.entries(s.tasks).forEach(([k,v])=>rows.push([k, v.toFixed(2)]));
+        let html = '<table><thead><tr><th>Concepte</th><th>Valor</th></tr></thead><tbody>';
+        rows.forEach(r=>{ html += `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>` });
+        html += '</tbody></table>';
+        tableDiv.innerHTML = html;
+      }
+
+      sel.addEventListener('change', e=> setStudent(e.target.value));
+      if(sel.options.length>0) setStudent(sel.options[0].value);
+
+      // Selector de mètrica per rànquing
+      (function(){
+        const options = [...DATA.exam_cols, ...DATA.llib_cols, 'Nota final','Mitjana exàmens','Mitjana tasques'];
+        const containerId = 'fig-selector-metric';
+        function draw(metric){
+          const sorted = DATA.full_table.slice().sort((a,b)=> b[metric]-a[metric]);
+          const x = sorted.map(r=>r[metric]);
+          const y = sorted.map(r=>r['Alumne']);
+          Plotly.newPlot(containerId, [{type:'bar', x, y, orientation:'h', marker:{color:'#6366f1'}}], {title:"Selector: indicador per alumne (canvia al menú)", xaxis:{title:metric}, yaxis:{title:'Alumne'}, height:520, margin:{t:60,l:160,r:40,b:60}}, {displayModeBar:false});
+        }
+        const metric = 'Nota final';
+        draw(metric);
+        const figDiv = document.getElementById(containerId);
+        const select = document.createElement('select'); select.style.margin='6px 0';
+        options.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.textContent=m; select.appendChild(o); });
+        select.value = metric; figDiv.parentNode.insertBefore(select, figDiv);
+        select.addEventListener('change', e=> draw(e.target.value));
+      })();
+    </script>
+  </body>
+</html>
